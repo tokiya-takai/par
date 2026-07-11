@@ -1,0 +1,44 @@
+{
+  "name": "@tokiya-takai/par",
+  "version": "0.1.0",
+  "description": "Local-first review cockpit for the sole reviewer of an outsourced, AI-heavy codebase — multi-repo, multi-PR, with repo-grounded AI Q&A.",
+  "keywords": [
+    "code-review",
+    "pull-request",
+    "cli",
+    "git-worktree",
+    "gh",
+    "ai",
+    "claude"
+  ],
+  "license": "MIT",
+  "author": "Tokiya Takai",
+  "homepage": "https://github.com/tokiya-takai/par#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tokiya-takai/par.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tokiya-takai/par/issues"
+  },
+  "type": "module",
+  "bin": {
+    "par": "dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "echo '(placeholder) wire the real build in M1 (e.g. tsup or tsc)'"
+  }
+}
