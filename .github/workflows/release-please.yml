@@ -40,9 +40,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
-      - run: npm install -g npm@latest # trusted publishing requires npm >= 11.5.1
+      - run: npm install -g npm@11 # trusted publishing needs npm >= 11.5.1 (npm 11 runs on node >= 22.9)
       - run: npm ci
       - run: npm run build
       - run: npm publish
