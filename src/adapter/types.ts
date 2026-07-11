@@ -1,4 +1,4 @@
-import type { Answer, CodeAnchor } from "../domain/types";
+import type { Answer, CodeAnchor } from "../domain/types.js";
 
 /** One turn of a multi-turn discussion. */
 export interface ThreadTurn {

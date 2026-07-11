@@ -1,2 +1,2 @@
-export * from "./types";
-export * from "./fake-adapter";
+export * from "./types.js";
+export * from "./fake-adapter.js";

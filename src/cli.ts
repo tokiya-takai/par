@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { FakeAdapter } from "./index";
+import { FakeAdapter } from "./index.js";
 
 // Uses the offline stub adapter. The intended default — a local `claude` agent
 // invoked per review target — is wired in a later change; the stub keeps early
