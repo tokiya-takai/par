@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/tokiya-takai/par/compare/par-v0.1.2...par-v0.1.3) (2026-07-12)
+
+
+### Features
+
+* add git worktree manager ([#6](https://github.com/tokiya-takai/par/issues/6)) ([72ee27d](https://github.com/tokiya-takai/par/commit/72ee27dcfff323c51285446f7f331850235d71f8))
+
 ## [0.1.2](https://github.com/tokiya-takai/par/compare/par-v0.1.1...par-v0.1.2) (2026-07-12)
 
 
