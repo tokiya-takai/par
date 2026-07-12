@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/tokiya-takai/par/compare/par-v0.1.1...par-v0.1.2) (2026-07-12)
+
+
+### Features
+
+* add clean-environment spawn harness for agent processes ([#4](https://github.com/tokiya-takai/par/issues/4)) ([0bf4939](https://github.com/tokiya-takai/par/commit/0bf49397d3baee8701ae3379295e37a13a5e8ee9))
+
 ## [0.1.1](https://github.com/tokiya-takai/par/compare/par-v0.1.0...par-v0.1.1) (2026-07-11)
 
 
