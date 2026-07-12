@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/tokiya-takai/par/compare/par-v0.1.3...par-v0.1.4) (2026-07-12)
+
+
+### Features
+
+* add gh client (pr list + diff) ([#8](https://github.com/tokiya-takai/par/issues/8)) ([24b5af6](https://github.com/tokiya-takai/par/commit/24b5af6ae31af2ea755c27c4fb095d2a1855610f))
+
 ## [0.1.3](https://github.com/tokiya-takai/par/compare/par-v0.1.2...par-v0.1.3) (2026-07-12)
 
 

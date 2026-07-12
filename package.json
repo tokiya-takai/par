@@ -1,6 +1,6 @@
 {
   "name": "@tokiya-takai/par",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Local-first review cockpit for the sole reviewer of an outsourced, AI-heavy codebase — multi-repo, multi-PR, with repo-grounded AI Q&A.",
   "keywords": [
     "code-review",
