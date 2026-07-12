@@ -54,7 +54,8 @@ export interface PullRequest {
   state: PullRequestState;
   baseRef: string;
   headRef: string;
-  reviewThreads: ReviewThread[];
+  /** Absent = not fetched yet; `[]` = fetched, none. (Import needs the GraphQL API.) */
+  reviewThreads?: ReviewThread[];
   ciStatus?: string;
 }
 
