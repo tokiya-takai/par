@@ -1,5 +1,5 @@
-import type { Answer, CodeAnchor, SourceAnchor } from "../domain/types";
-import type { AgentAdapter, Capabilities, InvokeInput } from "./types";
+import type { Answer, CodeAnchor, SourceAnchor } from "../domain/types.js";
+import type { AgentAdapter, Capabilities, InvokeInput } from "./types.js";
 
 export interface FakeAdapterOptions {
   /**
