@@ -129,6 +129,20 @@ describe("Core (end-to-end through FakeAdapter + real git worktree)", () => {
     await core.closeReviewTarget(target.id);
   });
 
+  it("closeAll attempts every target and reports failures without abandoning the rest", async () => {
+    const core = new Core({ adapter: new FakeAdapter() });
+    core.registerRepository(repo);
+    const a = await core.openReviewTarget({ repositoryId: "repo-1", base: "main", head: "main" });
+    const b = await core.openReviewTarget({ repositoryId: "repo-1", base: "main", head: "main" });
+    // Dirty a's worktree so its removal fails; b must still be cleaned up.
+    await writeFile(join(a.worktreePath as string, "a.ts"), "dirty\n");
+
+    await expect(core.closeAll()).rejects.toBeDefined();
+    const worktrees = await listWorktrees(repo.localPath);
+    expect(worktrees.some((w) => w.path === b.worktreePath)).toBe(false); // b removed
+    expect(worktrees.some((w) => w.path === a.worktreePath)).toBe(true); // a kept (failed)
+  });
+
   it("keeps the target (and throws) when the worktree can't be removed", async () => {
     const core = new Core({ adapter: new FakeAdapter() });
     core.registerRepository(repo);
