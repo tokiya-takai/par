@@ -182,6 +182,53 @@ describe("HTTP server (Hono transport)", () => {
     expect(await diffRes.text()).toContain("diff --git");
   });
 
+  it("serves a local-branch diff for a non-PR review target", async () => {
+    // A dedicated repo with a divergent branch (no PR involved).
+    const repo2 = join(root, "repo2");
+    await mkdir(repo2, { recursive: true });
+    await runGit(["init", "-b", "main"], { cwd: repo2 });
+    await writeFile(join(repo2, "f.ts"), "export const v = 1;\n");
+    await runGit(["add", "."], { cwd: repo2 });
+    await runGit(["-c", "user.email=t@e.x", "-c", "user.name=T", "commit", "-m", "init"], {
+      cwd: repo2,
+    });
+    await runGit(["checkout", "-b", "feature"], { cwd: repo2 });
+    await writeFile(join(repo2, "f.ts"), "export const v = 2;\n");
+    await runGit(["add", "."], { cwd: repo2 });
+    await runGit(["-c", "user.email=t@e.x", "-c", "user.name=T", "commit", "-m", "change"], {
+      cwd: repo2,
+    });
+    await runGit(["checkout", "main"], { cwd: repo2 });
+
+    const server = await boot();
+    await fetch(`${server.url}/api/repositories`, {
+      method: "POST",
+      headers: auth(server),
+      body: JSON.stringify({
+        id: "repo2",
+        name: "repo2",
+        localPath: repo2,
+        remote: "origin",
+        worktreeRoot: join(root, "wts2"),
+      }),
+    });
+    const target = (await (
+      await fetch(`${server.url}/api/review-targets`, {
+        method: "POST",
+        headers: auth(server),
+        body: JSON.stringify({ repositoryId: "repo2", base: "main", head: "feature" }),
+      })
+    ).json()) as TargetJson;
+
+    const diffRes = await fetch(`${server.url}/api/review-targets/${target.id}/diff`, {
+      headers: auth(server),
+    });
+    expect(diffRes.status).toBe(200);
+    const patch = await diffRes.text();
+    expect(patch).toContain("f.ts");
+    expect(patch).toContain("+export const v = 2;");
+  });
+
   it("answers a question, lists the comment, and errors on bad input", async () => {
     const server = await boot();
     await registerRepo(server);

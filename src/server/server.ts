@@ -5,6 +5,7 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { CoreError } from "../core/index.js";
 import type { Core } from "../core/index.js";
 import { getPullRequestDiff, listPullRequests } from "../gh/index.js";
+import { getDiff } from "../git/index.js";
 import type { PullRequestStateFilter } from "../gh/index.js";
 import {
   HttpError,
@@ -155,10 +156,12 @@ export function createServer(options: CreateServerOptions): ParServer {
     const id = c.req.param("id");
     const target = core.getReviewTarget(id);
     if (!target) throw new HttpError(404, `unknown review target: ${id}`);
-    if (!target.pr) throw new HttpError(400, "diff is only available for PR-mode review targets");
     const repo = core.getRepository(target.repositoryId);
     if (!repo) throw new HttpError(404, `unknown repository: ${target.repositoryId}`);
-    const patch = await gh.getPullRequestDiff(repo.localPath, target.pr.number);
+    // PR targets use the PR diff; a local-branch target diffs its refs directly.
+    const patch = target.pr
+      ? await gh.getPullRequestDiff(repo.localPath, target.pr.number)
+      : await getDiff(repo.localPath, target.base, target.head);
     return c.text(patch);
   });
 
