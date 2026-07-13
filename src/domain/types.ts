@@ -71,7 +71,8 @@ export interface ReviewTarget {
   head: string;
   mergeBase?: string;
   pr?: PullRequest;
-  worktreeId?: string;
+  /** Absolute path of the checked-out worktree, set once the target is opened. */
+  worktreePath?: string;
 }
 
 /** An isolated checkout of a PR head; the agent's cwd. */
