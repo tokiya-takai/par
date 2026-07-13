@@ -92,6 +92,8 @@ export interface AcquireWorktreeOptions {
   ref: string;
   /** Optional fetch to run before adding — e.g. a PR head. */
   fetch?: { remote: string; refspec: string };
+  /** Per-git-op timeout (ms) for this acquire; 0 disables. Raise/disable for a slow or large `fetch`. */
+  timeoutMs?: number;
 }
 
 /**
@@ -162,8 +164,13 @@ async function acquireWorktreeInRepo(options: AcquireWorktreeOptions): Promise<W
   // so the reuse check is accurate and a deleted dir is transparently recreated.
   await pruneWorktrees(options.repoPath);
 
+  const { timeoutMs } = options;
+
   if (options.fetch) {
-    await runGit(["fetch", "--", options.fetch.remote, options.fetch.refspec], { cwd: options.repoPath });
+    await runGit(["fetch", "--", options.fetch.remote, options.fetch.refspec], {
+      cwd: options.repoPath,
+      timeoutMs,
+    });
   }
 
   const existing = (await listWorktrees(options.repoPath)).find((w) => w.path === targetPath);
@@ -174,9 +181,12 @@ async function acquireWorktreeInRepo(options: AcquireWorktreeOptions): Promise<W
     if (status.trim() !== "") {
       throw new DirtyWorktreeError(existing.path, status.trim());
     }
-    await runGit(["checkout", "--detach", options.ref], { cwd: existing.path });
+    await runGit(["checkout", "--detach", options.ref], { cwd: existing.path, timeoutMs });
   } else {
-    await runGit(["worktree", "add", "--detach", "--", targetPath, options.ref], { cwd: options.repoPath });
+    await runGit(["worktree", "add", "--detach", "--", targetPath, options.ref], {
+      cwd: options.repoPath,
+      timeoutMs,
+    });
   }
 
   const result = (await listWorktrees(options.repoPath)).find((w) => w.path === targetPath);
