@@ -15,6 +15,8 @@ export interface StartCockpitOptions {
   host?: string;
   /** Bearer token; auto-generated if omitted. */
   token?: string;
+  /** Absolute path to the built UI (dist/ui); when set, it is served at `/`. */
+  uiDir?: string;
 }
 
 export interface Cockpit extends RunningServer {
@@ -38,6 +40,7 @@ export async function startCockpit(options: StartCockpitOptions = {}): Promise<C
     port: options.port,
     host: options.host,
     token: options.token,
+    uiDir: options.uiDir,
   });
   return {
     ...server,
