@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { AgentAdapter, ThreadTurn } from "../adapter/index.js";
+import type { AgentAdapter, Capabilities, ThreadTurn } from "../adapter/index.js";
 import {
   type Answer,
   type CodeAnchor,
@@ -38,6 +38,8 @@ export interface AskInput {
   referenceUrls?: string[];
   /** Continue an existing thread on this target; omit to start a new one. */
   threadId?: string;
+  /** Optional cancellation, forwarded to the adapter (e.g. the caller disconnects). */
+  signal?: AbortSignal;
 }
 
 export interface AnsweredComment {
@@ -74,6 +76,15 @@ export class Core {
 
   listRepositories(): Repository[] {
     return [...this.repos.values()];
+  }
+
+  getRepository(repositoryId: string): Repository | undefined {
+    return this.repos.get(repositoryId);
+  }
+
+  /** The adapter's self-declared capabilities, for UI feature-gating. */
+  capabilities(): Capabilities {
+    return this.adapter.capabilities();
   }
 
   /** Acquire (or reuse) the worktree for `head` and create a review target for it. */
@@ -143,6 +154,7 @@ export class Core {
       codeAnchor: input.codeAnchor,
       referenceUrls,
       threadHistory,
+      signal: input.signal,
     });
 
     const comment: Comment = {
