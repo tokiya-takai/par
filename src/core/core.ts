@@ -11,6 +11,7 @@ import {
   evidenceStrengthForComment,
 } from "../domain/index.js";
 import { acquireWorktree, listWorktrees, removeWorktree } from "../git/index.js";
+import { CoreError } from "./errors.js";
 
 export interface CoreOptions {
   /** Adapter used to answer questions (FakeAdapter now; the real `claude` adapter later). */
@@ -91,7 +92,7 @@ export class Core {
   async openReviewTarget(input: OpenReviewTargetInput): Promise<ReviewTarget> {
     const repo = this.repos.get(input.repositoryId);
     if (!repo) {
-      throw new Error(`unknown repository: ${input.repositoryId}`);
+      throw new CoreError("not_found", `unknown repository: ${input.repositoryId}`);
     }
 
     const id = randomUUID();
@@ -134,13 +135,16 @@ export class Core {
   private async performAsk(input: AskInput): Promise<AnsweredComment> {
     const target = this.targets.get(input.reviewTargetId);
     if (!target) {
-      throw new Error(`unknown review target: ${input.reviewTargetId}`);
+      throw new CoreError("not_found", `unknown review target: ${input.reviewTargetId}`);
     }
     if (target.worktreePath === undefined) {
-      throw new Error(`no worktree for review target: ${input.reviewTargetId}`);
+      throw new CoreError("conflict", `no worktree for review target: ${input.reviewTargetId}`);
     }
     if (input.threadId !== undefined && !this.threadExists(input.reviewTargetId, input.threadId)) {
-      throw new Error(`unknown thread on target ${input.reviewTargetId}: ${input.threadId}`);
+      throw new CoreError(
+        "invalid_request",
+        `unknown thread on target ${input.reviewTargetId}: ${input.threadId}`,
+      );
     }
 
     // Drop blank entries so an empty URL doesn't read as "a reference was requested".
