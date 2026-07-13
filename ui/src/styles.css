@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+h1 {
+  margin-block-end: 0.25rem;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.repo-form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 24rem;
+}
+
+.repo-form label {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.repo-form input {
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+}
+
+.repo-form button {
+  justify-self: start;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+}

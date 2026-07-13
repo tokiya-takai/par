@@ -42,16 +42,24 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && tsc -p tsconfig.build.json",
+    "build": "tsup && tsc -p tsconfig.build.json && npm run build:ui",
+    "build:ui": "tsc -p ui/tsconfig.json && vite build --config ui/vite.config.ts",
     "dev": "tsup --watch",
+    "dev:ui": "vite --config ui/vite.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
+    "vite": "^6.4.3",
     "vitest": "^4.1.10"
   },
   "dependencies": {
