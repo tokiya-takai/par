@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { AgentAdapter } from "../../src/adapter/index";
 import { FakeAdapter } from "../../src/adapter/index";
 import { Core } from "../../src/core/index";
 import type { Repository } from "../../src/domain/index";
@@ -161,6 +162,42 @@ describe("Core (end-to-end through FakeAdapter + real git worktree)", () => {
     expect(reasonings.some((r) => r.includes("turn 2"))).toBe(true);
     expect(reasonings.some((r) => r.includes("turn 3"))).toBe(true);
     expect(core.commentsForTarget(target.id)).toHaveLength(3);
+  });
+
+  it("forwards the abort signal to the adapter and stores no comment when aborted", async () => {
+    const adapter: AgentAdapter = {
+      name: "signal",
+      capabilities: () => ({
+        historyReplay: true,
+        sessionContinuation: false,
+        connectors: "unknown",
+      }),
+      async invoke(input) {
+        if (input.signal?.aborted) throw new Error("aborted");
+        return {
+          verdict: "aligned",
+          reasoning: "ok",
+          codeAnchors: [{ filePath: "a.ts", line: 1 }],
+          sourceAnchors: [],
+          agentMeta: { adapter: "signal" },
+        };
+      },
+    };
+    const core = new Core({ adapter });
+    core.registerRepository(repo);
+    const target = await core.openReviewTarget({ repositoryId: "repo-1", base: "main", head: "main" });
+
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      core.ask({
+        reviewTargetId: target.id,
+        codeAnchor: { filePath: "a.ts", line: 1 },
+        question: "?",
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow("aborted");
+    expect(core.commentsForTarget(target.id)).toHaveLength(0);
   });
 
   it("does not orphan a comment when close races an in-flight ask", async () => {
