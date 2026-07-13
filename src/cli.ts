@@ -1,7 +1,12 @@
 #!/usr/bin/env node
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { startCockpit } from "./index.js";
-import { type ServeOptions, parseServeArgs } from "./serve-args.js";
+import { type ServeOptions, buildCockpitUrl, parseServeArgs } from "./serve-args.js";
+
+/** The built UI ships next to this CLI as dist/ui. */
+const UI_DIR = join(dirname(fileURLToPath(import.meta.url)), "ui");
 
 /** How long to wait for a graceful shutdown before forcing exit. */
 const SHUTDOWN_GRACE_MS = 10_000;
@@ -13,9 +18,10 @@ function printUsage(): void {
 }
 
 async function serve(options: ServeOptions): Promise<void> {
-  const cockpit = await startCockpit(options);
-  console.log(`par cockpit listening on ${cockpit.url}`);
-  console.log(`token: ${cockpit.token}`);
+  const cockpit = await startCockpit({ ...options, uiDir: UI_DIR });
+  // Token travels in the URL fragment: it authorizes /api but never reaches the
+  // server or its logs.
+  console.log(`par cockpit: ${buildCockpitUrl(cockpit.url, cockpit.token)}`);
   console.log("using the offline stub adapter (no real agent yet). Press Ctrl+C to stop.");
 
   let shuttingDown = false;

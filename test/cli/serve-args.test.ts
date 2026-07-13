@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseServeArgs } from "../../src/serve-args";
+import { buildCockpitUrl, parseServeArgs } from "../../src/serve-args";
 
 describe("parseServeArgs", () => {
   it("parses valid flags and defaults", () => {
@@ -22,5 +22,16 @@ describe("parseServeArgs", () => {
   it("rejects unexpected extra positionals", () => {
     expect(() => parseServeArgs({}, ["oops"])).toThrow(/unexpected/);
     expect(() => parseServeArgs({ port: "3000" }, ["a", "b"])).toThrow(/unexpected/);
+  });
+});
+
+describe("buildCockpitUrl", () => {
+  it("round-trips tokens with URL-special chars through the fragment", () => {
+    // Mirrors the UI's readToken: URLSearchParams over the hash after "#".
+    for (const token of ["abc123def", "a+b", "a&b=c", "50%25off", "with space", "x/y?z"]) {
+      const url = buildCockpitUrl("http://127.0.0.1:5000", token);
+      const hash = new URL(url).hash.replace(/^#/, "");
+      expect(new URLSearchParams(hash).get("token")).toBe(token);
+    }
   });
 });

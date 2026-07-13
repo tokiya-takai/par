@@ -1,5 +1,7 @@
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { randomBytes, timingSafeEqual } from "node:crypto";
+import { relative } from "node:path";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { CoreError } from "../core/index.js";
@@ -28,6 +30,8 @@ export interface CreateServerOptions {
   token?: string;
   /** gh client override (defaults to the real one) — used in tests. */
   gh?: GhClient;
+  /** Absolute path to the built UI (dist/ui); when set, it is served at `/`. */
+  uiDir?: string;
 }
 
 export interface ParServer {
@@ -191,6 +195,15 @@ export function createServer(options: CreateServerOptions): ParServer {
     await core.closeReviewTarget(c.req.param("id"));
     return c.body(null, 204);
   });
+
+  // Serve the built UI (if provided) at `/`, after the API routes so it never
+  // shadows them. serveStatic's root is resolved relative to cwd, so translate
+  // the absolute uiDir. Static assets are unauthenticated (they hold no secrets);
+  // the token to reach /api arrives via the page URL fragment.
+  if (options.uiDir !== undefined) {
+    const root = relative(process.cwd(), options.uiDir) || ".";
+    app.use("/*", serveStatic({ root }));
+  }
 
   app.onError((err, c) => {
     if (err instanceof HttpError) {

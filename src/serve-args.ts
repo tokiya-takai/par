@@ -35,3 +35,13 @@ export function parseServeArgs(
   }
   return options;
 }
+
+/**
+ * Build the cockpit URL with the token in the fragment. The token is
+ * percent-encoded so characters like `+`, `&`, and `%` survive the UI's
+ * `URLSearchParams` parsing (which would otherwise turn `+` into a space or
+ * treat `&` as a separator).
+ */
+export function buildCockpitUrl(baseUrl: string, token: string): string {
+  return `${baseUrl}/#token=${encodeURIComponent(token)}`;
+}

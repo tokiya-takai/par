@@ -392,6 +392,21 @@ describe("HTTP server (Hono transport)", () => {
     expect(formatBaseUrl("[::1]", 9)).toBe("http://[::1]:9");
   });
 
+  it("serves the built UI at / (unauthenticated) while /api stays guarded", async () => {
+    const uiDir = join(root, "ui-dist");
+    await mkdir(uiDir, { recursive: true });
+    await writeFile(join(uiDir, "index.html"), "<!doctype html><title>par</title><div id=root></div>");
+    const core = new Core({ adapter: new FakeAdapter() });
+    const server = await startServer({ core, gh: fakeGh, uiDir });
+    servers.push(server);
+
+    const page = await fetch(`${server.url}/`);
+    expect(page.status).toBe(200);
+    expect(await page.text()).toContain("par");
+    // The API is still token-guarded even with the UI mounted.
+    expect((await fetch(`${server.url}/api/repositories`)).status).toBe(401);
+  });
+
   it("isLoopbackHost accepts only loopback hosts/origins", () => {
     for (const value of [
       "127.0.0.1",
