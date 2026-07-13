@@ -213,9 +213,24 @@ export class Core {
     }
   }
 
-  /** Close every open target (e.g. on shutdown); rejects if any close fails. */
+  /**
+   * Close every open target (e.g. on shutdown). Attempts all removals and waits
+   * for them to settle, then throws an AggregateError if any failed — one
+   * target's dirty/locked worktree must not abandon the others' cleanup.
+   */
   async closeAll(): Promise<void> {
-    await Promise.all([...this.targets.keys()].map((id) => this.closeReviewTarget(id)));
+    const outcomes = await Promise.allSettled(
+      [...this.targets.keys()].map((id) => this.closeReviewTarget(id)),
+    );
+    const failures = outcomes.filter(
+      (o): o is PromiseRejectedResult => o.status === "rejected",
+    );
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures.map((f) => f.reason),
+        `failed to close ${failures.length} review target(s)`,
+      );
+    }
   }
 
   private async worktreeStillRegistered(repoPath: string, worktreePath: string): Promise<boolean> {
