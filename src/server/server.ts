@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { CoreError } from "../core/index.js";
 import type { Core } from "../core/index.js";
 import { getPullRequestDiff, listPullRequests } from "../gh/index.js";
 import type { PullRequestStateFilter } from "../gh/index.js";
@@ -192,13 +193,15 @@ export function createServer(options: CreateServerOptions): ParServer {
     if (err instanceof HttpError) {
       return c.json({ error: err.message }, err.status as ContentfulStatusCode);
     }
+    if (err instanceof CoreError) {
+      const status = err.kind === "not_found" ? 404 : err.kind === "conflict" ? 409 : 400;
+      return c.json({ error: err.message }, status as ContentfulStatusCode);
+    }
     // A bad/empty request body surfaces as a JSON parse error — a 400, not a 500.
     if (err instanceof SyntaxError) return c.json({ error: "invalid JSON body" }, 400);
-    const message = err instanceof Error ? err.message : String(err);
-    // Core signals a missing entity with an "unknown ..." message.
-    if (/^unknown /.test(message)) return c.json({ error: message }, 404);
-    if (err instanceof RangeError) return c.json({ error: message }, 400);
-    return c.json({ error: message }, 500);
+    // gh/git layers reject invalid arguments (bad PR number, state, limit) with a RangeError.
+    if (err instanceof RangeError) return c.json({ error: err.message }, 400);
+    return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);
   });
 
   return { app, token };
@@ -237,6 +240,11 @@ export function startServer(options: StartServerOptions): Promise<RunningServer>
         close: () =>
           new Promise<void>((res, rej) => {
             server.close((err) => (err ? rej(err) : res()));
+            // Destroy in-flight connections so each request's `signal` fires.
+            // Prompt cancellation still depends on the adapter honoring that
+            // signal; one that ignores it runs the ask to completion, so a caller
+            // needing bounded shutdown must impose its own timeout (the CLI does).
+            if ("closeAllConnections" in server) server.closeAllConnections();
           }),
       });
     });

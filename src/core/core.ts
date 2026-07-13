@@ -11,6 +11,7 @@ import {
   evidenceStrengthForComment,
 } from "../domain/index.js";
 import { acquireWorktree, listWorktrees, removeWorktree } from "../git/index.js";
+import { CoreError } from "./errors.js";
 
 export interface CoreOptions {
   /** Adapter used to answer questions (FakeAdapter now; the real `claude` adapter later). */
@@ -91,7 +92,7 @@ export class Core {
   async openReviewTarget(input: OpenReviewTargetInput): Promise<ReviewTarget> {
     const repo = this.repos.get(input.repositoryId);
     if (!repo) {
-      throw new Error(`unknown repository: ${input.repositoryId}`);
+      throw new CoreError("not_found", `unknown repository: ${input.repositoryId}`);
     }
 
     const id = randomUUID();
@@ -134,13 +135,16 @@ export class Core {
   private async performAsk(input: AskInput): Promise<AnsweredComment> {
     const target = this.targets.get(input.reviewTargetId);
     if (!target) {
-      throw new Error(`unknown review target: ${input.reviewTargetId}`);
+      throw new CoreError("not_found", `unknown review target: ${input.reviewTargetId}`);
     }
     if (target.worktreePath === undefined) {
-      throw new Error(`no worktree for review target: ${input.reviewTargetId}`);
+      throw new CoreError("conflict", `no worktree for review target: ${input.reviewTargetId}`);
     }
     if (input.threadId !== undefined && !this.threadExists(input.reviewTargetId, input.threadId)) {
-      throw new Error(`unknown thread on target ${input.reviewTargetId}: ${input.threadId}`);
+      throw new CoreError(
+        "invalid_request",
+        `unknown thread on target ${input.reviewTargetId}: ${input.threadId}`,
+      );
     }
 
     // Drop blank entries so an empty URL doesn't read as "a reference was requested".
@@ -209,9 +213,24 @@ export class Core {
     }
   }
 
-  /** Close every open target (e.g. on shutdown); rejects if any close fails. */
+  /**
+   * Close every open target (e.g. on shutdown). Attempts all removals and waits
+   * for them to settle, then throws an AggregateError if any failed — one
+   * target's dirty/locked worktree must not abandon the others' cleanup.
+   */
   async closeAll(): Promise<void> {
-    await Promise.all([...this.targets.keys()].map((id) => this.closeReviewTarget(id)));
+    const outcomes = await Promise.allSettled(
+      [...this.targets.keys()].map((id) => this.closeReviewTarget(id)),
+    );
+    const failures = outcomes.filter(
+      (o): o is PromiseRejectedResult => o.status === "rejected",
+    );
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures.map((f) => f.reason),
+        `failed to close ${failures.length} review target(s)`,
+      );
+    }
   }
 
   private async worktreeStillRegistered(repoPath: string, worktreePath: string): Promise<boolean> {

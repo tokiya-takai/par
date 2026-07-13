@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { FakeAdapter } from "../../src/adapter/index";
 import { Core } from "../../src/core/index";
 import type { PullRequest, Repository } from "../../src/domain/index";
+import { listWorktrees } from "../../src/git/index";
 import { runGit } from "../../src/git/run";
 import {
   type GhClient,
@@ -12,6 +13,7 @@ import {
   createServer,
   formatBaseUrl,
   isLoopbackHost,
+  startCockpit,
   startServer,
 } from "../../src/server/index";
 
@@ -294,6 +296,46 @@ describe("HTTP server (Hono transport)", () => {
     await expect(
       startServer({ core: second, gh: fakeGh, port: first.port }),
     ).rejects.toBeDefined();
+  });
+
+  it("maps an unknown threadId to 400 (typed Core error)", async () => {
+    const server = await boot();
+    await registerRepo(server);
+    const target = (await (
+      await fetch(`${server.url}/api/review-targets`, {
+        method: "POST",
+        headers: auth(server),
+        body: JSON.stringify({ repositoryId: "repo-1", base: "main", head: "main" }),
+      })
+    ).json()) as TargetJson;
+
+    const res = await fetch(`${server.url}/api/review-targets/${target.id}/ask`, {
+      method: "POST",
+      headers: auth(server),
+      body: JSON.stringify({
+        codeAnchor: { filePath: "a.ts", line: 1 },
+        question: "?",
+        threadId: "does-not-exist",
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("startCockpit serves and removes worktrees on close", async () => {
+    const cockpit = await startCockpit({ gh: fakeGh });
+    cockpit.core.registerRepository(repo);
+    expect((await fetch(`${cockpit.url}/api/health`)).status).toBe(200);
+
+    const target = await cockpit.core.openReviewTarget({
+      repositoryId: "repo-1",
+      base: "main",
+      head: "main",
+    });
+    const path = target.worktreePath as string;
+    expect((await listWorktrees(repo.localPath)).some((w) => w.path === path)).toBe(true);
+
+    await cockpit.close();
+    expect((await listWorktrees(repo.localPath)).some((w) => w.path === path)).toBe(false);
   });
 
   it("formatBaseUrl brackets bare IPv6 hosts", () => {
