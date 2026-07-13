@@ -18,6 +18,13 @@ export interface InvokeInput {
   threadHistory: ThreadTurn[];
   /** Optional handle for session-continuation threading (e.g. `claude --resume`). */
   sessionId?: string;
+  /**
+   * Optional cancellation. When it aborts (e.g. the caller disconnects or a
+   * timeout fires), an adapter that runs a subprocess should kill it and reject.
+   * A stateless adapter (like the fake) may ignore it. `AbortSignal` is a global
+   * type, so exposing it here keeps consumers free of `@types/node`.
+   */
+  signal?: AbortSignal;
 }
 
 /** An adapter's self-declared capabilities, for UI feature-gating. */
