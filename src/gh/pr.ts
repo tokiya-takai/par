@@ -124,7 +124,7 @@ export interface GetPullRequestDiffOptions {
   timeoutMs?: number;
 }
 
-/** Fetch a pull request's diff as a git patch via `gh pr diff <n> --patch`. */
+/** Fetch a pull request's unified diff via `gh pr diff <n>`. */
 export async function getPullRequestDiff(
   repoPath: string,
   prNumber: number,
@@ -133,10 +133,12 @@ export async function getPullRequestDiff(
   if (!Number.isInteger(prNumber) || prNumber <= 0) {
     throw new RangeError(`invalid PR number: ${prNumber} (must be a positive integer)`);
   }
-  // --color=never: gh's diff color defaults to auto and CLICOLOR_FORCE/GH_FORCE_TTY
-  // can force ANSI even on a pipe; a patch must stay plain text. (Those env vars
-  // are also stripped in runGh's child env as defense-in-depth.)
-  const { stdout } = await runGh(["pr", "diff", String(prNumber), "--patch", "--color=never"], {
+  // No `--patch`: that emits git format-patch (email envelope + a diffstat) whose
+  // leading-space lines break unified-diff parsers. The default output is the
+  // plain combined unified diff. --color=never: gh's color defaults to auto and
+  // CLICOLOR_FORCE/GH_FORCE_TTY can force ANSI even on a pipe (those env vars are
+  // also stripped in runGh's child env as defense-in-depth).
+  const { stdout } = await runGh(["pr", "diff", String(prNumber), "--color=never"], {
     cwd: repoPath,
     timeoutMs: options.timeoutMs,
   });
