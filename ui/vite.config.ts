@@ -10,6 +10,9 @@ export default defineConfig({
   build: {
     outDir: fileURLToPath(new URL("../dist/ui", import.meta.url)),
     emptyOutDir: true,
+    // Full refractor (all Prism grammars) is bundled for broad language support;
+    // acceptable for a locally-served tool. (Slimming to a language subset later.)
+    chunkSizeWarningLimit: 1500,
   },
   server: {
     // Dev: run `par serve --port 8787` alongside `vite` and proxy the API to it.
