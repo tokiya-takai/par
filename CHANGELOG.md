@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.0](https://github.com/tokiya-takai/par/compare/par-v0.1.4...par-v0.2.0) (2026-07-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* run git/gh through a shared runner with a default timeout and readable errors ([#10](https://github.com/tokiya-takai/par/issues/10))
+
+### Features
+
+* `par serve` command + typed Core errors + graceful shutdown ([#14](https://github.com/tokiya-takai/par/issues/14)) ([20f91fe](https://github.com/tokiya-takai/par/commit/20f91fe275269423f98b8648dfdaa133cc30d55c))
+* add Core orchestrator (review-session wiring) ([#12](https://github.com/tokiya-takai/par/issues/12)) ([5ca6abf](https://github.com/tokiya-takai/par/commit/5ca6abf8d8b498207ce9836a893327a222890dd1))
+* local HTTP server (Hono transport) ([#13](https://github.com/tokiya-takai/par/issues/13)) ([93e56e7](https://github.com/tokiya-takai/par/commit/93e56e7715544ec1e967e9a213e6b97282c4df06))
+* local-branch diff for non-PR review targets ([#15](https://github.com/tokiya-takai/par/issues/15)) ([499a42e](https://github.com/tokiya-takai/par/commit/499a42e9e4efb8c93bac364e963b8c930c1c1cf1))
+* review cockpit UI (3-pane diff + Q&A) ([#17](https://github.com/tokiya-takai/par/issues/17)) ([2c9d7f8](https://github.com/tokiya-takai/par/commit/2c9d7f835210ff4c5fc10f245b2bd7209e9bfa19))
+* web UI walking skeleton (React + Vite) + static serving ([#16](https://github.com/tokiya-takai/par/issues/16)) ([3ecd746](https://github.com/tokiya-takai/par/commit/3ecd746f924c4e688b136e79478a1e80efa65a17))
+
+
+### Bug Fixes
+
+* run git/gh through a shared runner with a default timeout and readable errors ([#10](https://github.com/tokiya-takai/par/issues/10)) ([d90f9c4](https://github.com/tokiya-takai/par/commit/d90f9c4d39ae73b1dffaa621569ee3cc50952682))
+
 ## [0.1.4](https://github.com/tokiya-takai/par/compare/par-v0.1.3...par-v0.1.4) (2026-07-12)
 
 
